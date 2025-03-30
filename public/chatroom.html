@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .chat-container {
+            width: 50%; margin: auto; border: 1px solid #ccc;
+            padding: 10px; border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .messages {
+            height: 300px; overflow-y: auto; border: 1px solid #ddd;
+            padding: 10px; margin-bottom: 10px; text-align: left;
+        }
+        .input-container { display: flex; justify-content: space-between; }
+        input { width: 80%; padding: 8px; }
+        button {
+            width: 18%; padding: 8px; background-color: blue;
+            color: white; border: none; cursor: pointer;
+        }
+
+        /* Message Styling */
+        .message-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+            width: 100%;
+        }
+
+        .message-text {
+            flex-grow: 1;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: gray;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        /* Active Users Section */
+        .active-users {
+            text-align: left;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .active-users h3 {
+            margin: 0 0 10px 0;
+        }
+        .user-list {
+            list-style: none;
+            padding: 0;
+        }
+        .user-list li {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>🥳 Welcome, <span id="username"></span>!🌸🌸</h1>
+    <h2>Room: <span id="roomCode"></span></h2>
+
+    <!-- Active Users Section -->
+    <div class="active-users">
+        <h3>Active Users:</h3>
+        <ul id="userList" class="user-list"></ul>
+    </div>
+
+    <div class="chat-container">
+        <div class="messages" id="messages"></div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Ensure Socket.io is loaded correctly -->
+    <script src="/socket.io/socket.io.js"></script> 
+    <script>
+        // Extract username and room from URL
+        const params = new URLSearchParams(window.location.search);
+        const username = params.get("name") || "Guest";
+        const room = params.get("room") || "Unknown";
+
+        document.getElementById("username").textContent = username;
+        document.getElementById("roomCode").textContent = room;
+
+        // Initialize socket connection
+        const socket = io();
+
+        // Join Room
+        socket.emit("enterRoom", { username, room });
+
+        function sendMessage() {
+            const messageInput = document.getElementById("messageInput");
+            const messageText = messageInput.value.trim();
+
+            if (messageText === "") {
+                return;
+            }
+
+            // Clear input field
+            messageInput.value = "";
+
+            // Send message to server
+            socket.emit("from_client", { username, message: messageText, room });
+        }
+
+        // Listen for messages from the server
+        socket.on("from_server", (data) => {
+            const messagesDiv = document.getElementById("messages");
+
+            const newMessage = document.createElement("div");
+            newMessage.classList.add("message-container");
+
+            const messageText = document.createElement("span");
+            messageText.classList.add("message-text");
+            messageText.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+
+            const timestamp = document.createElement("span");
+            timestamp.classList.add("timestamp");
+            const localTime = new Date().toLocaleTimeString();
+            timestamp.textContent = localTime;
+
+            newMessage.appendChild(messageText);
+            newMessage.appendChild(timestamp);
+            messagesDiv.appendChild(newMessage);
+        });
+
+        // ✅ Listen for active users update
+        socket.on("people_present", (users) => {
+            const userList = document.getElementById("userList");
+            userList.innerHTML = ""; // Clear previous list
+            users.forEach(user => {
+                const li = document.createElement("li");
+                li.textContent = user;
+                userList.appendChild(li);
+            });
+        });
+    </script>
+</body>
+</html>

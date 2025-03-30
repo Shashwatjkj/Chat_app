@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            width: 80%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome, <span id="username"></span>!</h2>
+        <p>Enter a room code to create or join a room:</p>
+
+        <label for="roomCode">Room Code:</label>
+        <input type="text" id="roomCode" required>
+
+        <button onclick="sendRoomCode('/create-room')">Create Room</button>
+        <button onclick="sendRoomCode('/join-room')">Join Room</button>
+    </div>
+
+    <script>
+        // Get the user's name from the query parameter or localStorage
+        const params = new URLSearchParams(window.location.search);
+        const username = params.get("name") || localStorage.getItem("username") || "Guest";
+        document.getElementById("username").textContent = username;
+
+        async function  sendRoomCode(endpoint) {
+            const roomCode = document.getElementById("roomCode").value.trim();
+            if (roomCode === "") {
+                alert("Please enter a room code!");
+                return;
+            }
+
+            // Send the data using a POST request
+           
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: username, room: roomCode }) // Modify as needed
+        });
+
+        const data = await response.json();
+        alert(data.message); // Show success message
+
+        if (data.redirect) {
+            window.location.href = data.redirect; // Redirect if needed
+        }
+    } catch (error) {
+        console.error("Error:", error);
+    
+}
+        }
+    </script>
+</body>
+</html>

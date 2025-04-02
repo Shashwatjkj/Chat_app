@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import { createServer } from 'node:http';
 import rout from './router/create.routes.js';
 import  {array_of_rooms} from './likedb.js'
+import cors from 'cors';
 
 
 
@@ -13,6 +14,11 @@ let port = process.env.PORT || 3000; // Use environment variable or default to 3
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
+
+app.use(cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true
+}))
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
